@@ -1,4 +1,4 @@
-package one.ampadu.games.player.api;
+package one.ampadu.dsv.player.api;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
