@@ -24,14 +24,14 @@ public class Gemini implements LLM {
 
     private final AIModelRepository _aiModelRepo;
     private LLMModel _activeModel;
-    private  Client _gemini;
-    private  GenerateContentConfig _config;
+    private Client _gemini;
+    private GenerateContentConfig _config;
 
     @Value("${gemini.api.key}")
     private String apiKey;
 
     @PostConstruct
-    private void init(){
+    private void init() {
         _gemini = Client.builder()
                 .apiKey(apiKey)
                 .build();
@@ -39,8 +39,8 @@ public class Gemini implements LLM {
         _activeModel = loadAvailableModel().orElse(null);
     }
 
-    private Optional<LLMModel> loadAvailableModel(){
-        return  _aiModelRepo.findNextAvailableByProvider(getProvider().name(), LocalDateTime.now());
+    private Optional<LLMModel> loadAvailableModel() {
+        return _aiModelRepo.findNextAvailableByProvider(getProvider().name(), LocalDateTime.now());
     }
 
 
@@ -53,7 +53,7 @@ public class Gemini implements LLM {
         try {
             GenerateContentResponse response = _gemini.models.generateContent(_activeModel.getName(), prompt, _config);
             return new Success(response.text());
-        } catch (Exception ex){
+        } catch (Exception ex) {
             return resetModel(ex.getMessage());
         }
     }
