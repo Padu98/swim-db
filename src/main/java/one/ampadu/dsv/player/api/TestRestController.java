@@ -1,4 +1,4 @@
-package one.ampadu.games.player.api;
+package one.ampadu.dsv.player.api;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
