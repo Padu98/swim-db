@@ -9,9 +9,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>one.ampadu</groupId>
-	<artifactId>games</artifactId>
+	<artifactId>dsv_db</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>games</name>
+	<name>dsv_db</name>
 	<description>Demo project for Spring Boot</description>
 	<url/>
 	<licenses>

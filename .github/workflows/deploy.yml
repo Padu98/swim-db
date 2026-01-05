@@ -44,4 +44,5 @@ jobs:
               -e SPRING_DATASOURCE_PASSWORD="${{ secrets.PROD_DB_PASSWORD }}" \
               -e EDENAI_API_KEY_PAID="${{ secrets.EDENAI_API_KEY_PAID }}" \
               -e GEMINI_API_KEY="${{ secrets.GEMINI_API_KEY }}" \
+              -e SPRING_SQL_INIT_MODE=always \
               ${{ secrets.DOCKER_HUB_USERNAME }}/rest-api:latest
