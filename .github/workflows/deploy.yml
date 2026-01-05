@@ -36,9 +36,9 @@ jobs:
               -e SPRING_PROFILES_ACTIVE=prod \
               -e SPRING_SQL_INIT_MODE=always \
               -e SPRING_JPA_DEFER_DATASOURCE_INITIALIZATION=true \
-              -e SPRING_DATASOURCE_URL="${{ secrets.PROD_DB_URL }}" \
-              -e SPRING_DATASOURCE_USERNAME="${{ secrets.PROD_DB_USER }}" \
-              -e SPRING_DATASOURCE_PASSWORD="${{ secrets.PROD_DB_PASSWORD }}" \
+              -e PROD_DB_URL="${{ secrets.PROD_DB_URL }}" \
+              -e PROD_DB_USER="${{ secrets.PROD_DB_USER }}" \
+              -e PROD_DB_PASSWORD="${{ secrets.PROD_DB_PASSWORD }}" \
               -e EDENAI_API_KEY_PAID="${{ secrets.EDENAI_API_KEY_PAID }}" \
               -e GEMINI_API_KEY="${{ secrets.GEMINI_API_KEY }}" \
               ${{ secrets.DOCKER_HUB_USERNAME }}/rest-api:latest
