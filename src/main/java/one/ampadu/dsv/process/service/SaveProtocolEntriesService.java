@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import one.ampadu.dsv.llm.LLM;
 import one.ampadu.dsv.entity.ProtocolEntry;
-import one.ampadu.dsv.repository.AIModelRepository;
 import one.ampadu.dsv.repository.ProtocolEntryRepository;
 import one.ampadu.dsv.util.JsonUtil;
 import org.springframework.stereotype.Service;
@@ -82,7 +81,7 @@ public class SaveProtocolEntriesService {
             Input Text from second page: %s
             """;
 
-    public SaveProtocolEntriesService(List<LLM> llmList, ProtocolEntryRepository protocolRepo, AIModelRepository aiModelRepo){
+    public SaveProtocolEntriesService(List<LLM> llmList, ProtocolEntryRepository protocolRepo){
         _llmList = llmList;
         _protocolRepo = protocolRepo;
         _currentLLM = _llmList.stream().filter(LLM::isFree).findFirst().orElse(null);
@@ -105,6 +104,7 @@ public class SaveProtocolEntriesService {
                     String json = executePrompt(PROMPT_PROTOCOL_ENTRY.formatted(lastStroke, p));
                     List<ProtocolEntry> entriesFromJson = processProtocolJson(json, competitionMeta.year, competitionMeta.place);
                     entries.addAll(entriesFromJson);
+                    log.info("new entries collected {}", entries.size());
 
                 }
         );

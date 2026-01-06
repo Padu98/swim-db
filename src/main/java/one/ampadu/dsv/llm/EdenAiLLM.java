@@ -15,6 +15,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -79,7 +80,7 @@ public class EdenAiLLM implements LLM {
     }
 
 
-    private String sendRequestToEdenAI(HttpRequest request, String prompt, String provider, int retries){
+    private String sendRequestToEdenAI(HttpRequest request, String prompt, String provider, int retries) throws InterruptedException {
         HttpResponse<String> response;
         try {
             response = _httpClient.send(request, HttpResponse.BodyHandlers.ofString());
@@ -98,6 +99,7 @@ public class EdenAiLLM implements LLM {
 
                 if(retries > 0){
                     String model = GEMINI_MODEL_MAP.get(retries);
+                    log.warn("Failed to generate text. Retrying with model: {}", model);
                     HttpRequest httpRequest = buildRequest(prompt, model);
                     return sendRequestToEdenAI(httpRequest, prompt, model.split("/")[0], retries - 1);
                 }
@@ -108,7 +110,12 @@ public class EdenAiLLM implements LLM {
             return generatedText;
 
         } catch (IOException | InterruptedException e) {
-            throw new RuntimeException("Failed to execute paid prompt: " + e.getMessage());
+            if (retries > 0) {
+                log.warn("Network error (possibly GOAWAY). Retrying... Error: {}", e.getMessage());
+                TimeUnit.MILLISECONDS.sleep(5000);
+                return sendRequestToEdenAI(request, prompt, provider, retries - 1);
+            }
+            throw new RuntimeException("Failed after retries due to network error: " + e.getMessage());
         }
     }
 
