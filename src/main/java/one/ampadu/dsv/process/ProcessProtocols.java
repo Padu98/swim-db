@@ -51,18 +51,18 @@ public class ProcessProtocols {
         DownloadDSVProtocolService.PdFDownloadResult pdFDownloadResult = _downloadDsvPdfService.execute(nextRun);
 
         switch (pdFDownloadResult) {
-            case DownloadDSVProtocolService.Success success -> processPages(success, nextRun);
+            case DownloadDSVProtocolService.Success success -> processPages(success);
             case DownloadDSVProtocolService.Error _ -> log.error("Download error for ID {}", nextRun);
         }
     }
 
-    private void processPages(DownloadDSVProtocolService.Success success, int nextRun) {
-        ProtocolProcessRun protocolProcessRun = _protocolProcessRunRepo.findByNumberId(nextRun).orElse(new ProtocolProcessRun());
-        protocolProcessRun.setNumberId(nextRun);
+    private void processPages(DownloadDSVProtocolService.Success success) {
+        ProtocolProcessRun protocolProcessRun = _protocolProcessRunRepo.findByNumberId(success.processNumber()).orElse(new ProtocolProcessRun());
+        protocolProcessRun.setNumberId(success.processNumber());
         try {
             _saveProtocolEntriesService.execute(success.data());
             protocolProcessRun.setSuccess(new Date());
-            log.info("Successfully processed pages for ID {}", nextRun);
+            log.info("Successfully processed pages for ID {}", success.processNumber());
         } catch (Exception ex){
             log.error("Failed to process pages");
         }
