@@ -75,8 +75,9 @@ public class DownloadDSVProtocolService {
             long waitTime = ThreadLocalRandom.current().nextLong(1000, 6001);
             TimeUnit.MILLISECONDS.sleep(waitTime);
             nextRun = determineNextRunNumber(nextRun);
-        } while (response == null || (response.statusCode() != 200 && !isPdf(response.body())));
+        } while (response == null || response.statusCode() != 200 || !isPdf(response.body()));
 
+        log.info("Found valid PDF with number: {}", nextRun);
         return response;
     }
 
