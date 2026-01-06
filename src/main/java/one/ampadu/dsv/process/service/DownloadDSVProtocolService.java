@@ -46,6 +46,7 @@ public class DownloadDSVProtocolService {
             return new Success(pages);
 
         } catch (IOException | InterruptedException e) {
+            log.error("Failed to download PDF: {}", e.getMessage());
             if (e instanceof InterruptedException) {
                 Thread.currentThread().interrupt();
             }
@@ -67,13 +68,14 @@ public class DownloadDSVProtocolService {
 
             response = httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
 
-            if (response.statusCode() != 200) {
+            if (response != null && response.statusCode() != 200) {
                 log.error("Download failed with status code: {}", response.statusCode());
             }
+
             long waitTime = ThreadLocalRandom.current().nextLong(1000, 6001);
             TimeUnit.MILLISECONDS.sleep(waitTime);
             nextRun = determineNextRunNumber(nextRun);
-        } while (response.statusCode() != 200 && !isPdf(response.body()));
+        } while (response == null || (response.statusCode() != 200 && !isPdf(response.body())));
 
         return response;
     }
