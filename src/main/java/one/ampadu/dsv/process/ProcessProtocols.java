@@ -57,11 +57,12 @@ public class ProcessProtocols {
     }
 
     private void processPages(DownloadDSVProtocolService.Success success, int nextRun) {
-        ProtocolProcessRun protocolProcessRun = new ProtocolProcessRun();
+        ProtocolProcessRun protocolProcessRun = _protocolProcessRunRepo.findByNumberId(nextRun).orElse(new ProtocolProcessRun());
         protocolProcessRun.setNumberId(nextRun);
         try {
             _saveProtocolEntriesService.execute(success.data());
             protocolProcessRun.setSuccess(new Date());
+            log.info("Successfully processed pages for ID {}", nextRun);
         } catch (Exception ex){
             log.error("Failed to process pages");
         }

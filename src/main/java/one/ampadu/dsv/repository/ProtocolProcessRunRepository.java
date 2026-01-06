@@ -7,4 +7,5 @@ import java.util.Optional;
 
 public interface ProtocolProcessRunRepository extends JpaRepository<ProtocolProcessRun, Long> {
     Optional<ProtocolProcessRun> findFirstByOrderByIdDesc();
+    Optional<ProtocolProcessRun> findByNumberId(int numberId);
 }
