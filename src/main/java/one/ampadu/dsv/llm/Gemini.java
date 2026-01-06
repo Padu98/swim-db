@@ -85,6 +85,6 @@ public class Gemini implements LLM {
         }
 
         log.error("Unknown exception: {}", ex);
-        return new Error();
+        return new ChangedModel(null);
     }
 }
