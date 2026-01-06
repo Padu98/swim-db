@@ -26,7 +26,8 @@ public class DownloadDSVProtocolService {
     public PdFDownloadResult execute(int nextRun) {
 
         try {
-            HttpResponse<byte[]> response = searchNextFile(nextRun);
+            SearchFileResult searchNextFileResult = searchNextFile(nextRun);
+            HttpResponse<byte[]> response = searchNextFileResult.response();
 
             List<String> pages = new ArrayList<>();
             try (PDDocument document = Loader.loadPDF(response.body())) {
@@ -43,7 +44,7 @@ public class DownloadDSVProtocolService {
             }
 
             log.info("Successfully extracted {} pages from PDF.", pages.size());
-            return new Success(pages);
+            return new Success(pages, searchNextFileResult.protocolNumber());
 
         } catch (IOException | InterruptedException e) {
             log.error("Failed to download PDF: {}", e.getMessage());
@@ -56,9 +57,9 @@ public class DownloadDSVProtocolService {
     }
 
 
-    private HttpResponse<byte[]> searchNextFile(int nextRun) throws InterruptedException, IOException {
-
+    private SearchFileResult searchNextFile(int nextRun) throws InterruptedException, IOException {
         HttpResponse<byte[]> response;
+        SearchFileResult searchFileResult;
         do {
             String fileUrl = ProcessProtocols.DSV_PROTOCOL_ADDRESS.formatted(nextRun);
             HttpRequest request = HttpRequest.newBuilder()
@@ -67,6 +68,7 @@ public class DownloadDSVProtocolService {
                     .build();
 
             response = httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
+            searchFileResult = new SearchFileResult(response, nextRun);
 
             if (response != null && response.statusCode() != 200) {
                 log.error("Download failed with status code: {}", response.statusCode());
@@ -78,8 +80,10 @@ public class DownloadDSVProtocolService {
         } while (response == null || response.statusCode() != 200 || !isPdf(response.body()));
 
         log.info("Found valid PDF with number: {}", nextRun);
-        return response;
+        return searchFileResult;
     }
+
+    public record SearchFileResult(HttpResponse<byte[]> response, int protocolNumber){}
 
     public static int determineNextRunNumber(int lastRun){
         String lastRunAsString = String.valueOf(lastRun);
@@ -114,6 +118,6 @@ public class DownloadDSVProtocolService {
     }
 
     public sealed interface PdFDownloadResult permits Success, Error {}
-    public record Success(List<String> data) implements PdFDownloadResult {}
+    public record Success(List<String> data, int processNumber) implements PdFDownloadResult {}
     public record Error() implements PdFDownloadResult {}
 }
