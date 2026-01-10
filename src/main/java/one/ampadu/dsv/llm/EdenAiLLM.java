@@ -23,9 +23,10 @@ public class EdenAiLLM implements LLM {
 
     private static final String EDEN_URL = "https://api.edenai.run/v2/text/chat";
 
-    public static final String DEFAULT_MODEL  = "deepseek/deepseek-chat";
+    public static final String DEFAULT_MODEL  = "amazon/amazon.nova-lite-v1:0";
 
     private static final Map<Integer, String> GEMINI_MODEL_MAP = Map.of(
+            6, "deepseek/deepseek-chat",
             5, "openai/gpt-5-mini",
             4, "meta/llama3-1-70b-instruct-v1:0",
             3, "google/gemini-2.5-flash",
@@ -47,7 +48,7 @@ public class EdenAiLLM implements LLM {
         String generatedText;
         try {
             HttpRequest request = buildRequest(prompt, DEFAULT_MODEL);
-            generatedText = sendRequestToEdenAI(request, prompt, DEFAULT_MODEL.split("/")[0],  5);
+            generatedText = sendRequestToEdenAI(request, prompt, DEFAULT_MODEL.split("/")[0],  6);
         } catch (Exception e) {
             log.error("Failed to execute paid prompt: {}", e.getMessage());
             return new Error();
@@ -69,7 +70,7 @@ public class EdenAiLLM implements LLM {
         payload.set("settings", _mapper.createObjectNode().put(split[0], split[1]));
 
         payload.put("text", prompt);
-        payload.put("max_tokens", 25000);
+        payload.put("max_tokens", 50000);
 
         return HttpRequest.newBuilder()
                 .uri(URI.create(EDEN_URL))
