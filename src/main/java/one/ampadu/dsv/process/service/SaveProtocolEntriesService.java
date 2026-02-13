@@ -30,11 +30,12 @@ public class SaveProtocolEntriesService {
             ageGroup: The birth year or age category (extract as a number).
             sex: "MALE" or "FEMALE".
             time: The race time. Convert the format "MM:SS.hh" or "SS.hh" into total milliseconds (long).
-            distance: The race distance in meters (e.g., 50, 100, 200, 400).
+            distance: The race distance in meters (e.g., 50, 100, 200, 400, 800, 1500).
             stroke: The swimming style (e.g., "Freestyle", "Breaststroke", "Backstroke", "Butterfly", "Medley").
             club: The club the swimmer starts for, if apparent. If not, simply an empty string.
             
             Rules:
+            AgeGroup Filter: You must extract the birth year (e.g., 1999 or Jahrgang 98). If the birth year is older than 1970 (e.g., 1965, 1960) or if the value is a relative age (e.g., AK20, AK25, AK30) rather than a birth year, discard the entire record.
             Zero-Entry Handling: If the page contains no race results (e.g., only cover page, TOC, or general info), return an empty array [].
             Distance/Stroke Context: Usually, the distance and stroke are mentioned once as a header for a block of results. Apply this context to all swimmers listed under that header.
             Output Format: Return strictly valid JSON. Do not include any conversational text, markdown formatting (unless requested), or explanations.
@@ -62,23 +63,28 @@ public class SaveProtocolEntriesService {
             Role: You are a data extraction specialist for sports event documentation.
             
             Task: Analyze the provided text from the first two pages of a swimming competition protocol and extract the Year and the Location (City/Place) of the event.
+            Also extract the pool distance which ofcourse can only be 25 or 50 meters.
             
             Extraction Rules:
             Year: Look for the year the competition took place (e.g., 2023, 2024). Return only the 4-digit number.
             Place: Extract the city or specific venue where the competition was held.
+            poolDistance: competitions can be either long course (50m) or short course (25m). Only extract the number!
             Format: Return strictly valid JSON. No markdown code blocks (unless specified), no preamble, no conversational filler.
             
             JSON Structure:
    
             {
               "year": number,
-              "place": "String"
+              "place": "String",
+              "poolDistance": number,
             }
             Special Instruction: If the information is missing or ambiguous, return null for that specific field.
             
             Input Text from first page: %s
             
             Input Text from second page: %s
+            
+            Input Text from third page: %s
             """;
 
     public SaveProtocolEntriesService(List<LLM> llmList, ProtocolEntryRepository protocolRepo){
@@ -95,14 +101,14 @@ public class SaveProtocolEntriesService {
         List<ProtocolEntry> entries = new ArrayList<>();
 
         AtomicReference<String> lastStroke = new AtomicReference<>("None");
-        CompetitionMeta competitionMeta = extractPlaceAndYear(pages.getFirst(), pages.get(1));
+        CompetitionMeta competitionMeta = extractPlaceYearAndPoolLength(pages.getFirst(), pages.get(1), pages.get(2));
         pages.forEach(
                 p -> {
                     if(!entries.isEmpty()){
                         lastStroke.set(entries.getLast().getStroke());
                     }
                     String json = executePrompt(PROMPT_PROTOCOL_ENTRY.formatted(lastStroke, p));
-                    List<ProtocolEntry> entriesFromJson = processProtocolJson(json, competitionMeta.year, competitionMeta.place);
+                    List<ProtocolEntry> entriesFromJson = processProtocolJson(json, competitionMeta);
                     entries.addAll(entriesFromJson);
                     log.info("new entries collected {}", entries.size());
 
@@ -134,20 +140,20 @@ public class SaveProtocolEntriesService {
         }
     }
 
-    private CompetitionMeta extractPlaceAndYear(String firstPage, String secondPage){
-        String jsonFromLlm = executePrompt(YEAR_AND_PLACE_PROMPT.formatted(firstPage, secondPage));
+    private CompetitionMeta extractPlaceYearAndPoolLength(String firstPage, String secondPage, String thirdPage){
+        String jsonFromLlm = executePrompt(YEAR_AND_PLACE_PROMPT.formatted(firstPage, secondPage, thirdPage));
         ObjectMapper mapper = new ObjectMapper();
         try {
             return mapper.readValue(jsonFromLlm, CompetitionMeta.class);
         } catch (Exception e) {
             log.error("Failed to parse competition meta data: {}", jsonFromLlm, e);
-            return new CompetitionMeta(0, "Unknown");
+            return new CompetitionMeta(0, "Unknown", 0);
         }
     }
 
-    private record CompetitionMeta(int year, String place) {}
+    private record CompetitionMeta(int year, String place, int poolDistance) {}
 
-    private List<ProtocolEntry> processProtocolJson(String jsonResponse, int currentYear, String currentPlace) {
+    private List<ProtocolEntry> processProtocolJson(String jsonResponse, CompetitionMeta competitionMeta) {
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             String cleanedJson = JsonUtil.cleanJsonString(jsonResponse);
@@ -156,8 +162,9 @@ public class SaveProtocolEntriesService {
                     new TypeReference<>() {}
             );
             for (ProtocolEntry entry : entries) {
-                entry.setCalendarYear(currentYear);
-                entry.setPlace(currentPlace);
+                entry.setCalendarYear(competitionMeta.year);
+                entry.setPlace(competitionMeta.place);
+                entry.setPoolDistance(competitionMeta.poolDistance);
             }
             return entries;
 

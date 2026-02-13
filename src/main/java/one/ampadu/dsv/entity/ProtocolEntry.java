@@ -101,6 +101,16 @@ public class ProtocolEntry {
     private String place;
     private String club;
 
+    public void setPoolDistance(int poolDistance) {
+        this.poolDistance = poolDistance;
+    }
+
+    public int getPoolDistance() {
+        return poolDistance;
+    }
+
+    private int poolDistance;
+
     public void setClub(String club) {
         this.club = club;
     }
