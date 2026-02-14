@@ -109,12 +109,30 @@ public class DownloadDSVProtocolService {
     }
 
 
-    private boolean isPdf(byte [] body) {
+/*    private boolean isPdf(byte [] body) {
         if (body.length < 4 || body[0] != 0x25 || body[1] != 0x50 || body[2] != 0x44 || body[3] != 0x46) {
             log.error("File has no valid pdf signature.");
             return false;
         }
         return true;
+    }*/
+
+    private boolean isPdf(byte[] body) {
+        if (body == null || body.length < 4 || body[0] != 0x25 || body[1] != 0x50 || body[2] != 0x44 || body[3] != 0x46) {
+            log.error("File has no valid pdf signature.");
+            return false;
+        }
+
+        try (PDDocument doc = Loader.loadPDF(body)) {
+            if (doc.getNumberOfPages() <= 0) {
+                log.error("PDF has no pages.");
+                return false;
+            }
+            return true;
+        } catch (IOException e) {
+            log.warn("PDF signature is valid, but structure is corrupt: {}", e.getMessage());
+            return false;
+        }
     }
 
     public sealed interface PdFDownloadResult permits Success, Error {}
