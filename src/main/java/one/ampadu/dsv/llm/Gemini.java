@@ -69,6 +69,7 @@ public class Gemini implements LLM {
     }
 
     private ExecutionResult resetModel(String ex) {
+        log.warn("Resetting model due to exception: {}", ex);
         if (ex.contains("429")) {
             Instant blockUntil = Instant.now().plus(1, ChronoUnit.DAYS);
             if (ex.contains("Please retry in") && !ex.contains("limit: 0")) {
