@@ -114,6 +114,7 @@ public class SaveProtocolEntriesService {
 
                 }
         );
+        log.info("saving {} entries", entries.size());
         _protocolRepo.saveAll(entries);
     }
 

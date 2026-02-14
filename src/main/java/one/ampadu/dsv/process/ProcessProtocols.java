@@ -64,7 +64,7 @@ public class ProcessProtocols {
             protocolProcessRun.setSuccess(new Date());
             log.info("Successfully processed pages for ID {}", success.processNumber());
         } catch (Exception ex){
-            log.error("Failed to process pages");
+            log.error("Failed to process pages: {}", ex.getMessage());
         }
         _protocolProcessRunRepo.save(protocolProcessRun);
     }
