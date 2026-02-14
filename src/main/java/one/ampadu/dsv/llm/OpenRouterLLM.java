@@ -42,7 +42,7 @@ public class OpenRouterLLM implements LLM{
         return _aiModelRepo.findNextAvailableByProvider(getProvider().name(), LocalDateTime.now());
     }
 
-    @Value("${router.api.key}")
+    //@Value("${router.api.key}")
     private String openRouterApiKey;
 
 
