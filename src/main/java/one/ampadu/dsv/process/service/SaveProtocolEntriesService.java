@@ -144,9 +144,10 @@ public class SaveProtocolEntriesService {
     private CompetitionMeta extractPlaceYearAndPoolLength(String firstPage, String secondPage, String thirdPage){
         String jsonFromLlm = executePrompt(YEAR_AND_PLACE_PROMPT.formatted(firstPage, secondPage, thirdPage));
         log.info(jsonFromLlm);
+
         ObjectMapper mapper = new ObjectMapper();
         try {
-            return mapper.readValue(jsonFromLlm, CompetitionMeta.class);
+            return mapper.readValue(JsonUtil.cleanMetaDataJson(jsonFromLlm), CompetitionMeta.class);
         } catch (Exception e) {
             log.error("Failed to parse competition meta data", e);
             return new CompetitionMeta(0, "Unknown", 0);
@@ -158,7 +159,7 @@ public class SaveProtocolEntriesService {
     private List<ProtocolEntry> processProtocolJson(String jsonResponse, CompetitionMeta competitionMeta) {
         try {
             ObjectMapper objectMapper = new ObjectMapper();
-            String cleanedJson = JsonUtil.cleanJsonString(jsonResponse);
+            String cleanedJson = JsonUtil.cleanJsonArrayString(jsonResponse);
             List<ProtocolEntry> entries = objectMapper.readValue(
                     cleanedJson,
                     new TypeReference<>() {}

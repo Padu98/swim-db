@@ -47,7 +47,12 @@ public class Gemini implements LLM {
     @Override
     public ExecutionResult execute(String prompt) {
         if (_activeModel == null) {
-            _activeModel = loadAvailableModel().orElseThrow();
+            Optional<LLMModel> availableModel = loadAvailableModel();
+            if (availableModel.isEmpty()) {
+                log.error("No available model found for provider {}", getProvider());
+                throw new RuntimeException("No available model found for provider " + getProvider());
+            }
+            _activeModel = availableModel.get();
         }
 
         try {
