@@ -17,7 +17,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class ProcessProtocols {
 
-    private final static int FIRST_RUN_NUMBER = 12009;
+    private final static int FIRST_RUN_NUMBER = 162009;
     public final static int MAX_DAY_MONTH = 1500;
     public final static String DSV_PROTOCOL_ADDRESS = "https://dsvdaten.dsv.de/File.aspx?F=WKResults&File=%s.pdf";
 
