@@ -67,8 +67,8 @@ public class SaveProtocolEntriesService {
             
             Extraction Rules:
             Year: Look for the year the competition took place (e.g., 2023, 2024). Return only the 4-digit number.
-            Place: Extract the city or specific venue where the competition was held.
-            poolDistance: competitions can be either long course (50m) or short course (25m). Only extract the number!
+            Place: Extract the city or specific venue where the competition was held. If you cant find it the place should be the name of the competition.
+            poolDistance: competitions can be either long course (50m) or short course (25m). Only extract the number! -> 25 or 50
             Format: Return strictly valid JSON. No markdown code blocks (unless specified), no preamble, no conversational filler.
             
             JSON Structure:
@@ -78,7 +78,7 @@ public class SaveProtocolEntriesService {
               "place": "String",
               "poolDistance": number,
             }
-            Special Instruction: If the information is missing or ambiguous, return null for that specific field.
+            Special Instruction: If the information is missing or ambiguous, return null for that specific field. But always return a JSON in the given format! That is very important.
             
             Input Text from first page: %s
             
@@ -142,11 +142,12 @@ public class SaveProtocolEntriesService {
 
     private CompetitionMeta extractPlaceYearAndPoolLength(String firstPage, String secondPage, String thirdPage){
         String jsonFromLlm = executePrompt(YEAR_AND_PLACE_PROMPT.formatted(firstPage, secondPage, thirdPage));
+        log.info(jsonFromLlm);
         ObjectMapper mapper = new ObjectMapper();
         try {
             return mapper.readValue(jsonFromLlm, CompetitionMeta.class);
         } catch (Exception e) {
-            log.error("Failed to parse competition meta data: {}", jsonFromLlm, e);
+            log.error("Failed to parse competition meta data", e);
             return new CompetitionMeta(0, "Unknown", 0);
         }
     }

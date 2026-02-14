@@ -14,7 +14,8 @@ public interface LLM {
 
     enum Provider{
         Gemini,
-        EdenAiPaid
+        EdenAiPaid,
+        OpenRouter
     }
 
     sealed interface ExecutionResult permits Success, Error, ChangedModel {}
