@@ -46,6 +46,7 @@ public class Gemini implements LLM {
 
     @Override
     public ExecutionResult execute(String prompt) {
+        log.info("Running: {}", getProvider().name());
         if (_activeModel == null) {
             Optional<LLMModel> availableModel = loadAvailableModel();
             if (availableModel.isEmpty()) {
