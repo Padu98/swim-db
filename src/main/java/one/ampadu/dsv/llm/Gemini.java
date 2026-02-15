@@ -57,9 +57,11 @@ public class Gemini implements LLM {
         }
 
         try {
+            log.info("tried: {}", _activeModel.getName());
             GenerateContentResponse response = _gemini.models.generateContent(_activeModel.getName(), prompt, _config);
             return new Success(response.text());
         } catch (Exception ex) {
+            log.info("failed: {}", _activeModel.getName());
             return resetModel(ex.getMessage());
         }
     }
