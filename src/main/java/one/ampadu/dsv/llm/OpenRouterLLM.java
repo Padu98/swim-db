@@ -48,6 +48,7 @@ public class OpenRouterLLM implements LLM{
 
     @Override
     public ExecutionResult execute(String prompt) {
+        log.info("Running: {}", getProvider().name());
         if (_activeModel == null) {
             _activeModel = loadAvailableModel().orElseThrow();
         }

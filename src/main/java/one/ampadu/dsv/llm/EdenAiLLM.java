@@ -44,7 +44,7 @@ public class EdenAiLLM implements LLM {
 
     @Override
     public ExecutionResult execute(String prompt)  {
-
+        log.info("Running: {}", getProvider().name());
         String generatedText;
         try {
             HttpRequest request = buildRequest(prompt, DEFAULT_MODEL);

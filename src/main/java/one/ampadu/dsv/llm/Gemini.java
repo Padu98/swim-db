@@ -46,6 +46,7 @@ public class Gemini implements LLM {
 
     @Override
     public ExecutionResult execute(String prompt) {
+        log.info("Running: {}", getProvider().name());
         if (_activeModel == null) {
             Optional<LLMModel> availableModel = loadAvailableModel();
             if (availableModel.isEmpty()) {
@@ -56,9 +57,11 @@ public class Gemini implements LLM {
         }
 
         try {
+            log.info("tried: {}", _activeModel.getName());
             GenerateContentResponse response = _gemini.models.generateContent(_activeModel.getName(), prompt, _config);
             return new Success(response.text());
         } catch (Exception ex) {
+            log.info("failed: {}", _activeModel.getName());
             return resetModel(ex.getMessage());
         }
     }
