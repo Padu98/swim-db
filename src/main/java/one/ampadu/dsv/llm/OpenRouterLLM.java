@@ -23,8 +23,8 @@ import java.util.Optional;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class OpenRouterLLM implements LLM{
-
+public class OpenRouterLLM{ //implements LLM{
+/*
     @PostConstruct
     private void init() {
         _activeModel = loadAvailableModel().orElse(null);
@@ -115,5 +115,5 @@ public class OpenRouterLLM implements LLM{
             }
             throw new RuntimeException("Failed after retries due to network error: " + e.getMessage());
         }
-    }
+    }*/
 }
