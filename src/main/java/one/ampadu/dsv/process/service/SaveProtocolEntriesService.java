@@ -1,7 +1,9 @@
 package one.ampadu.dsv.process.service;
 
+import com.fasterxml.jackson.core.json.JsonReadFeature;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 
 import lombok.extern.slf4j.Slf4j;
 import one.ampadu.dsv.llm.LLM;
@@ -95,7 +97,9 @@ public class SaveProtocolEntriesService {
     private final List<LLM> _llmList;
     private LLM _currentLLM;
     private final ProtocolEntryRepository _protocolRepo;
-    private final ObjectMapper _mapper = new ObjectMapper();
+    private final ObjectMapper _mapper = JsonMapper.builder()
+            .enable(JsonReadFeature.ALLOW_BACKSLASH_ESCAPING_ANY_CHARACTER)
+            .build();
 
     public void execute(List<String> pages){
         List<ProtocolEntry> entries = new ArrayList<>();
