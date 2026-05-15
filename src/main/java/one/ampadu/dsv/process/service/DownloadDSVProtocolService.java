@@ -70,16 +70,16 @@ public class DownloadDSVProtocolService {
             response = httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
             searchFileResult = new SearchFileResult(response, nextRun);
 
-            if (response != null && response.statusCode() != 200) {
+            if (response.statusCode() != 200) {
                 log.error("Download failed with status code: {}", response.statusCode());
             }
 
             long waitTime = ThreadLocalRandom.current().nextLong(1000, 6001);
             TimeUnit.MILLISECONDS.sleep(waitTime);
             nextRun = determineNextRunNumber(nextRun);
-        } while (response == null || response.statusCode() != 200 || !isPdf(response.body()));
+        } while ( response.statusCode() != 200 || !isPdf(response.body()));
 
-        log.info("Found valid PDF with number: {}", nextRun);
+        log.info("Found valid PDF with number: {}", searchFileResult.protocolNumber());
         return searchFileResult;
     }
 

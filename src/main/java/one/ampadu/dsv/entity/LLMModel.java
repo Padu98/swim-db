@@ -1,9 +1,13 @@
 package one.ampadu.dsv.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.Date;
 
-
+@Getter
+@Setter
 @Entity
 @Table(name = "LLM_MODEL")
 public class LLMModel {
@@ -16,36 +20,4 @@ public class LLMModel {
     private String name;
     private String provider;
     private Date blocked;
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void setProvider(String provider) {
-        this.provider = provider;
-    }
-
-    public void setBlocked(Date blocked) {
-        this.blocked = blocked;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getProvider() {
-        return provider;
-    }
-
-    public Date getBlocked() {
-        return blocked;
-    }
 }
