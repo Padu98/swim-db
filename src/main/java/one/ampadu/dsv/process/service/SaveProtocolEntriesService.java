@@ -43,7 +43,6 @@ public class SaveProtocolEntriesService {
             Distance/Stroke Context: Usually, the distance and stroke are mentioned once as a header for a block of results. Apply this context to all swimmers listed under that header.
             Removing double quotes from strings: Remove double quotes from every club (e.g. "S.C./"Hellas/" Einbeck e.V." becomes "club": "S.C.Hellas Einbeck e.V.").
             Output Format: Return strictly valid JSON. Do not include any conversational text, markdown formatting (unless requested), or explanations.
-            Fields of the json: It is absolutely forbidden to add any additional fields to the JSON structure like secondLastName or a lastName2! Only the fields listed below are allowed.
             
             JSON Structure:
             [
