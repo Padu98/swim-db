@@ -48,6 +48,7 @@ public class ProcessProtocols {
     }
 
     private void executeRun(int nextRun) {
+        log.info("Processing protocol file {}", nextRun);
         DownloadDSVProtocolService.PdFDownloadResult pdFDownloadResult = _downloadDsvPdfService.execute(nextRun);
 
         switch (pdFDownloadResult) {
