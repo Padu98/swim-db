@@ -39,7 +39,7 @@ public class SaveProtocolEntriesService {
             AgeGroup Filter: You must extract the birth year (e.g., 1999 or Jahrgang 98). If the birth year is older than 1970 (e.g., 1965, 1960) or if the value is a relative age (e.g., AK20, AK25, AK30) rather than a birth year, discard the entire record.
             Zero-Entry Handling: If the page contains no race results (e.g., only cover page, TOC, or general info), return an empty array [].
             Distance/Stroke Context: Usually, the distance and stroke are mentioned once as a header for a block of results. Apply this context to all swimmers listed under that header.
-            String Escaping: Any string value that contains double quotes must escape them with a backslash (e.g., "club": "S.C.\\"Hellas\\" Einbeck e.V.").
+            Removing double quotes from strings: Remove double quotes from every club (e.g., "club": "S.C."Hellas" Einbeck e.V." -> "club": "S.C.Hellas Einbeck e.V.").
             Output Format: Return strictly valid JSON. Do not include any conversational text, markdown formatting (unless requested), or explanations.
             
             JSON Structure:
