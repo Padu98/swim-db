@@ -59,9 +59,7 @@ public class ProcessProtocols {
     private void processPages(DownloadDSVProtocolService.Success success) {
         ProtocolProcessRun protocolProcessRun = _protocolProcessRunRepo.findByNumberId(success.processNumber()).orElse(new ProtocolProcessRun());
 
-        log.info("test log 1");
         protocolProcessRun.setNumberId(success.processNumber());
-        log.info("test log 2");
 
         try {
             _saveProtocolEntriesService.execute(success.data());

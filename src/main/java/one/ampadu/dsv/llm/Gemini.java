@@ -10,7 +10,7 @@ import one.ampadu.dsv.repository.AIModelRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -51,7 +51,7 @@ public class Gemini implements LLM {
             Optional<LLMModel> availableModel = loadAvailableModel();
             if (availableModel.isEmpty()) {
                 log.error("No available model found for provider {}", getProvider());
-                throw new RuntimeException("No available model found for provider " + getProvider());
+                return new Error();
             }
             _activeModel = availableModel.get();
         }

@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
 @Service
@@ -96,29 +95,28 @@ public class SaveProtocolEntriesService {
     private final List<LLM> _llmList;
     private LLM _currentLLM;
     private final ProtocolEntryRepository _protocolRepo;
+    private final ObjectMapper _mapper = new ObjectMapper();
 
     public void execute(List<String> pages){
         List<ProtocolEntry> entries = new ArrayList<>();
-
-        AtomicReference<String> lastStroke = new AtomicReference<>("None");
+        String lastStroke = "None";
         CompetitionMeta competitionMeta = extractPlaceYearAndPoolLength(pages.getFirst(), pages.get(1), pages.get(2));
-        pages.forEach(
-                p -> {
-                    if(!entries.isEmpty()){
-                        lastStroke.set(entries.getLast().getStroke());
-                    }
 
-                    log.info("Executing prompt :)");
-                    String json = executePrompt(PROMPT_PROTOCOL_ENTRY.formatted(lastStroke, p));
-                    log.info("got Result of execution :))");
+        for (String page : pages) {
+            if (!entries.isEmpty()) {
+                lastStroke = entries.getLast().getStroke();
+            }
 
-                    List<ProtocolEntry> entriesFromJson = processProtocolJson(json, competitionMeta);
-                    entries.addAll(entriesFromJson);
-                    log.info("new entries collected {}", entries.size());
+            log.info("Executing prompt");
+            String json = executePrompt(PROMPT_PROTOCOL_ENTRY.formatted(lastStroke, page));
+            log.info("Got result from LLM");
 
-                }
-        );
-        log.info("saving {} entries", entries.size());
+            List<ProtocolEntry> entriesFromJson = processProtocolJson(json, competitionMeta);
+            entries.addAll(entriesFromJson);
+            log.info("New entries collected: {}", entries.size());
+        }
+
+        log.info("Saving {} entries", entries.size());
         _protocolRepo.saveAll(entries);
     }
 
@@ -148,9 +146,8 @@ public class SaveProtocolEntriesService {
     private CompetitionMeta extractPlaceYearAndPoolLength(String firstPage, String secondPage, String thirdPage){
         try {
             String jsonFromLlm = executePrompt(YEAR_AND_PLACE_PROMPT.formatted(firstPage, secondPage, thirdPage));
-            log.info(jsonFromLlm);
-            ObjectMapper mapper = new ObjectMapper();
-            return mapper.readValue(JsonUtil.cleanMetaDataJson(jsonFromLlm), CompetitionMeta.class);
+            log.info("Competition meta JSON: {}", jsonFromLlm);
+            return _mapper.readValue(JsonUtil.cleanMetaDataJson(jsonFromLlm), CompetitionMeta.class);
         } catch (Exception e) {
             log.error("Failed to parse competition meta data", e);
             return new CompetitionMeta(0, "Unknown", 0);
@@ -161,9 +158,8 @@ public class SaveProtocolEntriesService {
 
     private List<ProtocolEntry> processProtocolJson(String jsonResponse, CompetitionMeta competitionMeta) {
         try {
-            ObjectMapper objectMapper = new ObjectMapper();
             String cleanedJson = JsonUtil.cleanJsonArrayString(jsonResponse);
-            List<ProtocolEntry> entries = objectMapper.readValue(
+            List<ProtocolEntry> entries = _mapper.readValue(
                     cleanedJson,
                     new TypeReference<>() {}
             );
@@ -176,7 +172,7 @@ public class SaveProtocolEntriesService {
 
         } catch (Exception e) {
             log.error("Invalid json", e);
-            log.error(jsonResponse);
+            log.error("Raw LLM response: {}", jsonResponse);
             throw new RuntimeException("Invalid json", e);
         }
     }

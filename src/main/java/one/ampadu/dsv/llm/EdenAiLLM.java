@@ -1,7 +1,6 @@
 package one.ampadu.dsv.llm;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -60,11 +59,6 @@ public class EdenAiLLM implements LLM {
         String[] split = model.split("/");
 
 
-        ArrayNode messages = _mapper.createArrayNode();
-        messages.add(_mapper.createObjectNode()
-                .put("role", "user")
-                .put("message", prompt));
-
         ObjectNode payload = _mapper.createObjectNode();
         payload.put("providers", split[0]);
         payload.set("settings", _mapper.createObjectNode().put(split[0], split[1]));
@@ -93,9 +87,9 @@ public class EdenAiLLM implements LLM {
             String generatedText = root.path(provider).path("generated_text").asText();
 
             if (generatedText == null || generatedText.isBlank()) {
-                if (root.path(provider).path("error") != null) {
-                    String errorMessage = root.path(provider).path("error").path("message").toString();
-                    log.error(errorMessage);
+                JsonNode errorNode = root.path(provider).path("error");
+                if (!errorNode.isMissingNode() && !errorNode.isNull()) {
+                    log.error("Eden AI error: {}", errorNode.path("message").asText());
                 }
 
                 if(retries > 0){
@@ -110,7 +104,10 @@ public class EdenAiLLM implements LLM {
 
             return generatedText;
 
-        } catch (IOException | InterruptedException e) {
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Request interrupted", e);
+        } catch (IOException e) {
             if (retries > 0) {
                 log.warn("Network error (possibly GOAWAY). Retrying... Error: {}", e.getMessage());
                 TimeUnit.MILLISECONDS.sleep(5000);
