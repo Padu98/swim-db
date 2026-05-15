@@ -35,7 +35,7 @@ public class SaveProtocolEntriesService {
             stroke: The swimming style (e.g., "Freestyle", "Breaststroke", "Backstroke", "Butterfly", "Medley").
             club: The club the swimmer starts for, if apparent. If not, simply an empty string. Always remove all double quotes from the club name. That is very important!
             
-            It is absolutely forbidden to add any additional fields to the JSON structure like a second last name or a third name!
+            It is absolutely forbidden to add any additional fields to the JSON structure like a secondLastName or lastName2!!! If a person really has two second names you can just combine them in the field lastName!
             
             Rules:
             AgeGroup Filter: You must extract the birth year (e.g., 1999 or Jahrgang 98). If the birth year is older than 1970 (e.g., 1965, 1960) or if the value is a relative age (e.g., AK20, AK25, AK30) rather than a birth year, discard the entire record.
@@ -43,7 +43,7 @@ public class SaveProtocolEntriesService {
             Distance/Stroke Context: Usually, the distance and stroke are mentioned once as a header for a block of results. Apply this context to all swimmers listed under that header.
             Removing double quotes from strings: Remove double quotes from every club (e.g. "S.C./"Hellas/" Einbeck e.V." becomes "club": "S.C.Hellas Einbeck e.V.").
             Output Format: Return strictly valid JSON. Do not include any conversational text, markdown formatting (unless requested), or explanations.
-            Fields of the json: It is absolutely forbidden to add any additional fields to the JSON structure like a second last name or a third name! Only the fields listed below are allowed.
+            Fields of the json: It is absolutely forbidden to add any additional fields to the JSON structure like secondLastName or a lastName2! Only the fields listed below are allowed.
             
             JSON Structure:
             [
@@ -109,13 +109,17 @@ public class SaveProtocolEntriesService {
         List<ProtocolEntry> entries = new ArrayList<>();
         String lastStroke = "None";
         CompetitionMeta competitionMeta = extractPlaceYearAndPoolLength(pages.getFirst(), pages.get(1), pages.get(2));
+        if (competitionMeta.poolDistance == 0) {
+            competitionMeta = extractPlaceYearAndPoolLength(pages.getFirst(), pages.get(1), pages.get(2) + pages.get(3) + pages.get(4));
+        }
 
-        for (String page : pages) {
+        for (int i = 0; i < pages.size(); i++) {
+            String page = pages.get(i);
             if (!entries.isEmpty()) {
                 lastStroke = entries.getLast().getStroke();
             }
 
-            log.info("Executing prompt");
+            log.info("Parsing page {}/{}", i + 1, pages.size());
             String json = executePrompt(PROMPT_PROTOCOL_ENTRY.formatted(lastStroke, page));
             log.info("Got result from LLM");
 
