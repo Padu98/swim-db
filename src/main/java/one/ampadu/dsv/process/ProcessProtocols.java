@@ -27,29 +27,21 @@ public class ProcessProtocols {
 
 
     @Scheduled(fixedRate = 5400000)
-    public void start() {
+    public void execute() {
         log.info("run ProcessProtocols {}", new Date());
-        try {
-            process();
-        } catch (InterruptedException e) {
-            log.error("Process was interrupted", e);
-            Thread.currentThread().interrupt();
-        }
+        process();
     }
 
-    private void process() throws InterruptedException {
+    private void process() {
         int nextRun = FIRST_RUN_NUMBER;
         Optional<ProtocolProcessRun> lastRunOptional = _protocolProcessRunRepo.findFirstByOrderByIdDesc();
         if (lastRunOptional.isPresent()) {
             ProtocolProcessRun lastRun = lastRunOptional.get();
             nextRun = lastRun.getSuccess() == null ? lastRun.getNumberId() : DownloadDSVProtocolService.determineNextRunNumber(lastRun.getNumberId());
         }
-        executeRun(nextRun);
-    }
 
-    private void executeRun(int nextRun) {
         log.info("Processing protocol file {}", nextRun);
-        DownloadDSVProtocolService.PdFDownloadResult pdFDownloadResult = _downloadDsvPdfService.execute(nextRun);
+        DownloadDSVProtocolService.PdFDownloadResult pdFDownloadResult = _downloadDsvPdfService.getNextPdf(nextRun);
 
         switch (pdFDownloadResult) {
             case DownloadDSVProtocolService.Success success -> processPages(success);
@@ -57,15 +49,17 @@ public class ProcessProtocols {
         }
     }
 
-    private void processPages(DownloadDSVProtocolService.Success success) {
-        ProtocolProcessRun protocolProcessRun = _protocolProcessRunRepo.findByNumberId(success.processNumber()).orElse(new ProtocolProcessRun());
 
-        protocolProcessRun.setNumberId(success.processNumber());
+    private void processPages(DownloadDSVProtocolService.Success pdf) {
+        ProtocolProcessRun protocolProcessRun = _protocolProcessRunRepo.findByNumberId(pdf.processNumber()).orElse(new ProtocolProcessRun());
+        protocolProcessRun.setNumberId(pdf.processNumber());
+
+        _protocolProcessRunRepo.save(protocolProcessRun);
 
         try {
-            _saveProtocolEntriesService.execute(success.data());
+            _saveProtocolEntriesService.execute(pdf.data(), protocolProcessRun);
             protocolProcessRun.setSuccess(new Date());
-            log.info("Successfully processed pages for ID {}", success.processNumber());
+            log.info("Successfully processed pages for ID {}", pdf.processNumber());
         } catch (Exception ex){
             log.error("Failed to process pages: {}", ex.getMessage());
         }
