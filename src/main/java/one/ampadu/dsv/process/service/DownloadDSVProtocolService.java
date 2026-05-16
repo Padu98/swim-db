@@ -23,7 +23,7 @@ public class DownloadDSVProtocolService {
 
     private final HttpClient httpClient = HttpClient.newHttpClient();
 
-    public PdFDownloadResult execute(int nextRun) {
+    public PdFDownloadResult getNextPdf(int nextRun) {
 
         try {
             SearchFileResult searchNextFileResult = searchNextFile(nextRun);

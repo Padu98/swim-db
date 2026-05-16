@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.json.JsonMapper;
 import lombok.extern.slf4j.Slf4j;
 import one.ampadu.dsv.llm.LLM;
 import one.ampadu.dsv.entity.ProtocolEntry;
+import one.ampadu.dsv.entity.ProtocolProcessRun;
 import one.ampadu.dsv.repository.ProtocolEntryRepository;
 import one.ampadu.dsv.util.JsonUtil;
 import org.springframework.stereotype.Service;
@@ -104,7 +105,7 @@ public class SaveProtocolEntriesService {
             .enable(JsonReadFeature.ALLOW_BACKSLASH_ESCAPING_ANY_CHARACTER)
             .build();
 
-    public void execute(List<String> pages){
+    public void execute(List<String> pages, ProtocolProcessRun processRun){
         List<ProtocolEntry> entries = new ArrayList<>();
         String lastStroke = "None";
         CompetitionMeta competitionMeta = extractPlaceYearAndPoolLength(pages.getFirst(), pages.get(1), pages.get(2));
@@ -123,6 +124,7 @@ public class SaveProtocolEntriesService {
             log.info("Got result from LLM");
 
             List<ProtocolEntry> entriesFromJson = processProtocolJson(json, competitionMeta);
+            entriesFromJson.forEach(e -> e.setProcessRun(processRun));
             entries.addAll(entriesFromJson);
             log.info("New entries collected: {}", entries.size());
         }

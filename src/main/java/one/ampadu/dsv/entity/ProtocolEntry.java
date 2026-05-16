@@ -27,4 +27,8 @@ public class ProtocolEntry {
     private String place;
     private String club;
     private int poolDistance;
+
+    @ManyToOne
+    @JoinColumn(name = "process_run_id")
+    private ProtocolProcessRun processRun;
 }
