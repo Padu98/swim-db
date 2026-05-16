@@ -77,7 +77,7 @@ public class SaveProtocolEntriesService {
             Format: Return strictly valid JSON. No markdown code blocks (unless specified), no preamble, no conversational filler.
             
             JSON Structure:
-   
+            
             {
               "year": number,
               "place": "String",
@@ -92,10 +92,10 @@ public class SaveProtocolEntriesService {
             Input Text from third page: %s
             """;
 
-    public SaveProtocolEntriesService(List<LLM> llmList, ProtocolEntryRepository protocolRepo){
+    public SaveProtocolEntriesService(List<LLM> llmList, ProtocolEntryRepository protocolRepo) {
         _llmList = llmList;
         _protocolRepo = protocolRepo;
-        _currentLLM = _llmList.stream().filter(LLM::isFree).findFirst().orElse(null);
+        initCurrentLLM();
     }
 
     private final List<LLM> _llmList;
@@ -105,7 +105,9 @@ public class SaveProtocolEntriesService {
             .enable(JsonReadFeature.ALLOW_BACKSLASH_ESCAPING_ANY_CHARACTER)
             .build();
 
-    public void execute(List<String> pages, ProtocolProcessRun processRun){
+    public void execute(List<String> pages, ProtocolProcessRun processRun) {
+        initCurrentLLM();
+
         List<ProtocolEntry> entries = new ArrayList<>();
         String lastStroke = "None";
         CompetitionMeta competitionMeta = extractPlaceYearAndPoolLength(pages.getFirst(), pages.get(1), pages.get(2));
@@ -145,8 +147,16 @@ public class SaveProtocolEntriesService {
         };
     }
 
+    private void initCurrentLLM() {
+        Optional<LLM> firstCostFreeLLM = _llmList.stream()
+                .filter(LLM::isFree)
+                .findFirst();
+
+        _currentLLM = firstCostFreeLLM.orElseGet(() -> _llmList.stream().filter(llm -> !llm.isFree()).findFirst().orElseThrow());
+    }
+
     private void reInitializeCurrentLLM(LLM.ChangedModel modelWithSameProvider) {
-        if(modelWithSameProvider.name() == null){
+        if (modelWithSameProvider.name() == null) {
             Optional<LLM> firstCostFreeLLM = _llmList.stream()
                     .filter(llm -> llm.getProvider() != _currentLLM.getProvider())
                     .filter(LLM::isFree)
@@ -156,7 +166,7 @@ public class SaveProtocolEntriesService {
         }
     }
 
-    private CompetitionMeta extractPlaceYearAndPoolLength(String firstPage, String secondPage, String thirdPage){
+    private CompetitionMeta extractPlaceYearAndPoolLength(String firstPage, String secondPage, String thirdPage) {
         try {
             String jsonFromLlm = executePrompt(YEAR_AND_PLACE_PROMPT.formatted(firstPage, secondPage, thirdPage));
             log.info("Competition meta JSON: {}", jsonFromLlm);
@@ -167,14 +177,16 @@ public class SaveProtocolEntriesService {
         }
     }
 
-    private record CompetitionMeta(int year, String place, int poolDistance) {}
+    private record CompetitionMeta(int year, String place, int poolDistance) {
+    }
 
     private List<ProtocolEntry> processProtocolJson(String jsonResponse, CompetitionMeta competitionMeta) {
         try {
             String cleanedJson = JsonUtil.cleanJsonArrayString(JsonUtil.fixClubFieldQuotes(jsonResponse));
             List<ProtocolEntry> entries = _mapper.readValue(
                     cleanedJson,
-                    new TypeReference<>() {}
+                    new TypeReference<>() {
+                    }
             );
             for (ProtocolEntry entry : entries) {
                 entry.setCalendarYear(competitionMeta.year);
